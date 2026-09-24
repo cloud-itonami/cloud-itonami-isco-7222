@@ -1,0 +1,35 @@
+;; What this vertical's robot physically does, declared for
+;; kotoba.robotics.process (kotoba-lang/robotics). `kbb -M:physics` runs it.
+;;
+;; README "Robotics premise": a workshop scheduling/logistics coordination
+;; robot for toolmakers (ISCO 7222) schedules the crew, logs task, materials
+;; usage and progress, and coordinates tooling-materials supply orders; it
+;; never operates machine tools. Its physical work is moving tool-steel die
+;; blocks between the rack and the machining / heat-treatment stations; the
+;; physics its schedule depends on is how long a die block needs in the
+;; tempering oven.
+;;
+;; Every number without a cited source is marked `estimate` in its :basis.
+;; Replacing an estimate with a sourced value is this bot's growth work.
+{:physics/schema "itonami.physical-ai.spec.v1"
+ :repo "cloud-itonami/cloud-itonami-isco-7222"
+ :cases
+ [{:id :die-block-to-station
+   :kind :manipulator
+   :procedure "arm lifts a tool-steel die block from the storage rack onto the transfer table of the machining / heat-treatment station"
+   :params {:l1-m 0.70 :l2-m 0.60 :m1-kg 12.0 :m2-kg 8.0
+            :from [0.80 0.40] :to [0.30 0.95] :duration-s 3.0 :steps 600}
+   :sweep {:param :payload-kg :values [5.0 10.0 20.0 30.0 45.0]}
+   :quantity :peak-tau1-nm
+   :limit {:max 300.0 :basis "estimate: continuous shoulder torque of a ~25 kg-payload industrial arm class"}
+   :boundary {:lo 1.0 :hi 120.0}}
+  {:id :die-block-temper-soak
+   :kind :thermal
+   :procedure "a hardened die block goes into a 560 C tempering oven; its centre must come within 15 C (545 C) before the soak time starts; heat enters from both faces, so half the block is modelled with an adiabatic centre-plane; the half-thickness is swept"
+   :params {:conductivity-w-mk 28.0 :density-kg-m3 7800.0 :specific-heat-j-kgk 550.0
+            :t0-c 40.0 :t-hot-c 560.0 :h-front-w-m2k 120.0 :h-back-w-m2k 0.0
+            :threshold-c 545.0 :duration-s 21600.0 :nodes 11}
+   :sweep {:param :thickness-m :values [0.010 0.020 0.040 0.060 0.080 0.120]}
+   :quantity :time-to-threshold-s
+   :limit {:max 7200.0 :basis "estimate: a 2-hour heat-up slot in the oven schedule before the tempering soak is timed; the 120 W/m2K film coefficient (forced convection plus radiation at 560 C) is also an estimate"}
+   :boundary {:lo 0.01 :hi 0.2}}]}
