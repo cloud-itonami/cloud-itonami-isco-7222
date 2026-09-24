@@ -1,5 +1,5 @@
 (ns toolmaker.actor-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [toolmaker.actor :as actor]
             [toolmaker.store :as store]))
 
